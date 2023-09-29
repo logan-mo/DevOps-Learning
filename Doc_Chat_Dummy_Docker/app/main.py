@@ -8,8 +8,10 @@ import os
 # Load model directly
 my_fastapi_app = FastAPI()
 
-DOCUMENT_STORE_PATH = "documents"
-HISTORY_STORE_PATH = "chat_histories"
+base_dir = os.path.join("build", "app")
+
+DOCUMENT_STORE_PATH = os.path.join(base_dir, "documents")
+HISTORY_STORE_PATH = os.path.join(base_dir, "chat_histories")
 
 
 @my_fastapi_app.get("/")
@@ -140,11 +142,11 @@ def regenerate_last_response(user_id: str, doc_id: str):
 
 
 def read_message_history(user_id: str, doc_id: str):
-    if os.path.exists("chat_histories"):
+    if os.path.exists(HISTORY_STORE_PATH):
         history_name = user_id + "_" + doc_id + ".json"
-        history_files = os.listdir("chat_histories")
+        history_files = os.listdir(HISTORY_STORE_PATH)
         if history_name in history_files:
-            with open(f"chat_histories/{history_name}") as f:
+            with open(os.path.join(HISTORY_STORE_PATH, history_name)) as f:
                 return json.load(f)
     return {
         "user_id": user_id,
@@ -158,15 +160,15 @@ def read_message_history(user_id: str, doc_id: str):
 def write_message_history(
     user_id: str, doc_id: str, messages: list[dict], chat_title: str = None
 ):
-    if not os.path.exists("chat_histories"):
-        os.mkdir("chat_histories")
+    if not os.path.exists(HISTORY_STORE_PATH):
+        os.mkdir(HISTORY_STORE_PATH)
 
     message_history = read_message_history(user_id, doc_id)
     message_history["messages"] = messages
     if chat_title is not None:
         message_history["chat_title"] = chat_title
 
-    with open(f"chat_histories/{user_id}_{doc_id}.json", "w") as f:
+    with open(os.path.join(HISTORY_STORE_PATH, f"{user_id}_{doc_id}.json"), "w") as f:
         json.dump(message_history, f)
 
 
